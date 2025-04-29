@@ -1,16 +1,40 @@
+import time
 import requests
 
-# ضع توكن البوت الخاص بك هنا
 BOT_TOKEN = '7251405209:AAEy-iBVV14VtRzUAYeb59FV3kJb2TqzGV0'
+API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
 
-# رابط API لإلغاء تفعيل الويب هوك
-url = f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook"
+# حذف Webhook
+requests.get(API_URL + "deleteWebhook")
 
-# إرسال الطلب
-response = requests.get(url)
+def get_updates(offset=None):
+    url = API_URL + "getUpdates"
+    if offset:
+        url += f"?offset={offset}"
+    return requests.get(url).json()
 
-# التحقق من النجاح وطباعة الرسالة
-if response.status_code == 200 and response.json().get("ok"):
-    print(" تم تسجيل دخول المهيب تم تسجيل دخول منظمه النسور // بكسم امه الي يلعب ويانا شعارنا موجود ")
-else:
-    print("فشل في حذف الويب هوك:", response.text)
+def send_message(chat_id, text):
+    url = API_URL + "sendMessage"
+    payload = {"chat_id": chat_id, "text": text}
+    requests.post(url, data=payload)
+
+def main():
+    print("البوت يعمل الآن بدون توقف...")
+    last_update_id = None
+
+    while True:
+        updates = get_updates(last_update_id)
+        if "result" in updates:
+            for update in updates["result"]:
+                last_update_id = update["update_id"] + 1
+                message = update.get("message", {})
+                text = message.get("text", "")
+                chat_id = message.get("chat", {}).get("id")
+
+                if text == "/start":
+                    send_message(chat_id, " تم تسجيل دخول المهيب تم تسجيل دخول منظمه النسور // بكسم امه الي يلعب ويانا شعارنا موجود ")
+
+        time.sleep(1)
+
+if __name__ == "__main__":
+    main()
